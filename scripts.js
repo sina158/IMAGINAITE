@@ -42,13 +42,15 @@ this.camera = new THREE.PerspectiveCamera( 65, this.container.clientWidth / this
 this.camera.position.set( 0,0, 100 );
 }
 createRenderer() {
-this.renderer = new THREE.WebGLRenderer();
-this.renderer.setSize( this.container.clientWidth, this.container.clientHeight );
-this.renderer.setPixelRatio( Math.min( window.devicePixelRatio, 2));
-this.renderer.outputEncoding = THREE.sRGBEncoding;
-this.container.appendChild( this.renderer.domElement );
-this.renderer.setAnimationLoop(() => { this.render() })
+    this.renderer = new THREE.WebGLRenderer({ alpha: true }); // Enable transparency
+    this.renderer.setSize(this.container.clientWidth, this.container.clientHeight);
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    this.renderer.outputEncoding = THREE.sRGBEncoding;
+    this.renderer.setClearColor(0x000000, 0); // Set clear color to transparent
+    this.container.appendChild(this.renderer.domElement);
+    this.renderer.setAnimationLoop(() => { this.render() });
 }
+
 onWindowResize(){
 this.camera.aspect = this.container.clientWidth / this.container.clientHeight;
 this.camera.updateProjectionMatrix();
