@@ -1,10 +1,11 @@
-// Load Three.js Library
-const threeJsScript = document.createElement('script');
-threeJsScript.src = "https://cdnjs.cloudflare.com/ajax/libs/three.js/r125/three.min.js";
-document.head.appendChild(threeJsScript);
+window.addEventListener('load', () => {
+    const threeJsScript = document.createElement('script');
+    threeJsScript.src = "https://cdnjs.cloudflare.com/ajax/libs/three.js/r125/three.min.js";
+    threeJsScript.onload = initialize;
+    document.head.appendChild(threeJsScript);
+});
 
-// Wait for Three.js to load
-threeJsScript.onload = () => {
+function initialize() {
     window.AnimateText = 'IMAGINAITE';
 
     class CreateParticles {
@@ -220,6 +221,53 @@ threeJsScript.onload = () => {
         }
     }
 
+    class Environment {
+        constructor(font, particle) {
+            this.font = font;
+            this.particle = particle;
+            this.container = document.querySelector('#magic');
+            this.scene = new THREE.Scene();
+            this.createCamera();
+            this.createRenderer();
+            this.setup();
+            this.bindEvents();
+        }
+
+        bindEvents() {
+            window.addEventListener('resize', this.onWindowResize.bind(this));
+        }
+
+        setup() {
+            this.createParticles = new CreateParticles(this.scene, this.font, this.particle, this.camera, this.renderer);
+        }
+
+        render() {
+            this.createParticles.render();
+            this.renderer.render(this.scene, this.camera);
+        }
+
+        createCamera() {
+            this.camera = new THREE.PerspectiveCamera(65, this.container.clientWidth / this.container.clientHeight, 1, 10000);
+            this.camera.position.set(0, 0, 100);
+        }
+
+        createRenderer() {
+            this.renderer = new THREE.WebGLRenderer({ alpha: true }); // Enable alpha for transparency
+            this.renderer.setSize(this.container.clientWidth, this.container.clientHeight);
+            this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            this.renderer.outputEncoding = THREE.sRGBEncoding;
+            this.renderer.setClearColor(0x000000, 0); // Set background to transparent
+            this.container.appendChild(this.renderer.domElement);
+            this.renderer.setAnimationLoop(() => { this.render() });
+        }
+
+        onWindowResize() {
+            this.camera.aspect = this.container.clientWidth / this.container.clientHeight;
+            this.camera.updateProjectionMatrix();
+            this.renderer.setSize(this.container.clientWidth, this.container.clientHeight);
+        }
+    }
+
     const preload = () => {
         let manager = new THREE.LoadingManager();
         manager.onLoad = function () {
@@ -234,4 +282,4 @@ threeJsScript.onload = () => {
     if (document.readyState === "complete" || (document.readyState !== "loading" && !document.documentElement.doScroll))
         preload();
     else document.addEventListener("DOMContentLoaded", preload);
-};
+}
