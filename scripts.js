@@ -221,6 +221,7 @@ function initialize() {
         }
     }
 
+    // Ensure Environment class is defined before calling it
     class Environment {
         constructor(font, particle) {
             this.font = font;
@@ -271,7 +272,7 @@ function initialize() {
     const preload = () => {
         let manager = new THREE.LoadingManager();
         manager.onLoad = function () {
-            const environment = new Environment(typo, particle);
+            const environment = new Environment(typo, particle); // Ensure Environment is defined
         }
         var typo = null;
         const loader = new THREE.FontLoader(manager);
