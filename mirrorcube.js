@@ -200,4 +200,190 @@ class SpinnableObject extends THREE.Object3D {
       }
 
       if (Math.abs(this._deltaY) > minDelta) {
-        this
+        this._deltaY *= drag;
+      } else {
+        this._deltaY = 0;
+      }
+
+      this._handleRotation();
+    }
+  }
+}
+
+class SocialCube extends THREE.Object3D {
+  constructor(size, renderer, camera) {
+    super();
+    this._bind('_handleActionStart', '_handleMouseMove', '_handleActionEnd', '_unbindSocial');
+
+    this._camera = camera;
+    this._mouse = new THREE.Vector2();
+    this._raycaster = new THREE.Raycaster();
+    this._renderer = renderer;
+
+    const loader = new THREE.TextureLoader();
+    loader.setCrossOrigin('');
+
+    const materials = [];
+    for (let i = 0; i < size.length; i++) {
+      loader.load(size[i], (t) => {
+        t.offset.set(-0.5, -0.5);
+        t.repeat.set(2, 2);
+        const face = new THREE.MeshBasicMaterial({ map: t, transparent: true });
+        face.map.needsUpdate = true;
+        materials[i] = face;
+
+        if (i === (size.length - 1)) {
+          this._material = new THREE.MultiMaterial(materials);
+          this._geometry = new THREE.CubeGeometry(size[0], size[1], size[2]);
+          this._mesh = new THREE.Mesh(this._geometry, this._material);
+          this._mesh.doubleSided = true;
+          this.add(this._mesh);
+
+          document.addEventListener('touchstart', this._handleActionStart, false);
+          document.addEventListener('mousedown', this._handleActionStart, false);
+          document.addEventListener('mousemove', this._handleMouseMove, false);
+        }
+      });
+    }
+  }
+
+  _bind(...methods) {
+    methods.forEach(method => this[method] = this[method].bind(this));
+  }
+
+  _getIntersects(x, y) {
+    this._mouse.x = (x / this._renderer.domElement.clientWidth) * 2 - 1;
+    this._mouse.y = -(y / this._renderer.domElement.clientHeight) * 2 + 1;
+    this._raycaster.setFromCamera(this._mouse, this._camera);
+    return this._raycaster.intersectObject(this._mesh);
+  }
+
+  _handleActionStart(e) {
+    const action = e.type === 'touchstart' ? {
+      x: e.touches[0].clientX,
+      y: e.touches[0].clientY
+    } : {
+      x: e.clientX,
+      y: e.clientY
+    };
+
+    const intersects = this._getIntersects(action.x, action.y);
+    if (intersects.length > 0) {
+      this._bindSocial();
+      setTimeout(this._unbindSocial, 1400);
+    }
+  }
+
+  _handleActionEnd(e) {
+    const action = e.type === 'touchend' && e.touches.length > 0 ? {
+      x: e.touches[0].clientX,
+      y: e.touches[0].clientY
+    } : {
+      x: e.clientX,
+      y: e.clientY
+    };
+
+    const intersects = this._getIntersects(action.x, action.y);
+    this._fireLink(intersects);
+  }
+
+  _fireLink(intersects) {
+    if (intersects.length > 0) {
+      const index = intersects[0].face.materialIndex;
+      if (index >= 0 && index < this._social.length) {
+        window.open(this._social[index].link, '_blank', '', '');
+      }
+    }
+    this._unbindSocial();
+  }
+
+  _handleMouseMove(e) {
+    e.preventDefault();
+    const intersects = this._getIntersects(e.clientX, e.clientY);
+    document.body.style.cursor = intersects.length > 0 ? 'pointer' : 'move';
+  }
+
+  _bindSocial() {
+    document.addEventListener('mouseup', this._handleActionEnd, false);
+    document.addEventListener('touchend', this._handleActionEnd, false);
+    document.addEventListener('mousemove', this._unbindSocial, false);
+    document.addEventListener('touchmove', this._unbindSocial, false);
+  }
+
+  _unbindSocial() {
+    document.removeEventListener('mouseup', this._handleActionEnd, false);
+    document.removeEventListener('touchend', this._handleActionEnd, false);
+    document.removeEventListener('mousemove', this._unbindSocial, false);
+  }
+}
+
+class ReflectionCube extends THREE.Object3D {
+  constructor(size, reflect) {
+    super();
+    this._material = new THREE.MeshBasicMaterial({
+      color: 0xffffff,
+      wireframe: false,
+      envMap: reflect,
+      refractionRatio: 0.8,
+    });
+
+    this._geometry = new THREE.BoxGeometry(size[0], size[1], size[2]);
+    this._mesh = new THREE.Mesh(this._geometry, this._material);
+    this.add(this._mesh);
+  }
+}
+
+class Skybox extends THREE.Object3D {
+  constructor(size, images) {
+    super();
+
+    const loader = new THREE.CubeTextureLoader();
+    loader.setCrossOrigin('');
+
+    this._texture = loader.load(images, (t) => {
+      t.format = THREE.RGBFormat;
+      t.mapping = THREE.CubeRefractionMapping;
+
+      const shader = THREE.ShaderLib['cube'];
+      shader.uniforms['tCube'].value = t;
+
+      this._geometry = new THREE.BoxGeometry(size[0], size[1], size[2]);
+
+      this._material = new THREE.ShaderMaterial({
+        fragmentShader: shader.fragmentShader,
+        vertexShader: shader.vertexShader,
+        uniforms: shader.uniforms,
+        depthWrite: false,
+        side: THREE.BackSide,
+      });
+
+      this._mesh = new THREE.Mesh(this._geometry, this._material);
+      this.add(this._mesh);
+    });
+  }
+}
+
+class MousePerspectiveCamera extends THREE.PerspectiveCamera {
+  constructor(...args) {
+    super(...args);
+    this._mouseX = 0;
+    this._mouseY = 0;
+    document.addEventListener('mousemove', this._handleMouseMove.bind(this), false);
+  }
+
+  _handleMouseMove(e) {
+    e.preventDefault();
+    this._mouseX = (e.clientX - window.innerWidth / 2) * 0.05;
+    this._mouseY = (e.clientY - window.innerHeight / 2) * 0.05;
+  }
+
+  _update() {
+    this.position.x += (this._mouseX - this.position.x) * 0.015;
+    this.position.y += (-this._mouseY - this.position.y) * 0.015;
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  const app = new App();
+  app._render();
+});
