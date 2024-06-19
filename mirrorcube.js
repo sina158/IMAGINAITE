@@ -1,4 +1,4 @@
-const SKYBOX_IMG = 'https://github.com/sina158/IMAGINAITE/blob/3b4855f13204f36552c73bfca524b80f66af31e7/background.jpg?raw=true';
+const SKYBOX_IMG = 'https://github.com/sina158/IMAGINAITE/blob/3b4855f13204f36552c73bfca524b80f66af31e7/background.jpg;
 
 class App {
   constructor() {
