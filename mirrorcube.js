@@ -1,4 +1,4 @@
-const SKYBOX_IMG = 'https://uploads-ssl.webflow.com/665b8804b8f1c9676cba9423/665b9823cc865c01262ec980_IMG-20240601-WA0002.jpg;
+const SKYBOX_IMG = 'https://uploads-ssl.webflow.com/665b8804b8f1c9676cba9423/665b9823cc865c01262ec980_IMG-20240601-WA0002.jpg';
 
 class App {
   constructor() {
